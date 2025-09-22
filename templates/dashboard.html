@@ -1,1 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Water Wellness</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+    <h2>Welcome, {{ username }}!</h2>
+    <p>Stay hydrated to stay healthy!</p>
+
+    <!-- Add Water -->
+    <form method="POST" action="{{ url_for('add_water') }}">
+        <input type="number" step="0.1" name="amount" placeholder="Water in liters" required>
+        <button type="submit">Add Water</button>
+    </form>
+
+    <!-- Daily Goal Progress -->
+    <h3>Today's Intake: {{ today_amount }} / {{ daily_goal }} L</h3>
+    <div class="progress-bar">
+        <div class="progress" style="width: {{ (today_amount/daily_goal)*100 }}%;"></div>
+    </div>
+
+    <!-- Water Intake History Table -->
+    <h3>Water Intake History</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount (L)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in water_entries %}
+            <tr>
+                <td>{{ entry.date }}</td>
+                <td>{{ entry.amount }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 7-day Chart -->
+    <h3>Last 7 Days Water Intake</h3>
+    <canvas id="waterChart" width="400" height="200"></canvas>
+
+    <a href="{{ url_for('logout') }}">Logout</a>
+</div>
+
+<script>
+const ctx = document.getElementById('waterChart').getContext('2d');
+const waterChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ chart_labels|tojson }},
+        datasets: [{
+            label: 'Water Intake (L)',
+            data: {{ chart_data|tojson }},
+            backgroundColor: 'rgba(0, 123, 255, 0.6)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
+</body>
+</html>
 
