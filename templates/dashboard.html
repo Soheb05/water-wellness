@@ -7,7 +7,24 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<div class="container">
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2>Water Wellness</h2>
+        <button onclick="showSection('dashboard')">Dashboard</button>
+        <button onclick="showSection('reminders')">Reminders</button>
+        <button onclick="showSection('progress')">Progress</button>
+        <button onclick="showSection('settings')">Settings</button>
+        <a href="{{ url_for('logout') }}"><button>Logout</button></a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Dashboard -->
+        <!-- Dashboard -->
+<div id="dashboard-section" class="section active">
     <h2>Welcome, {{ username }}!</h2>
     <p>Stay hydrated to stay healthy!</p>
 
@@ -17,20 +34,17 @@
         <button type="submit">Add Water</button>
     </form>
 
-    <!-- Daily Goal Progress -->
+    <!-- Daily Progress -->
     <h3>Today's Intake: {{ today_amount }} / {{ daily_goal }} L</h3>
-    <div class="progress-bar">
-        <div class="progress" style="width: {{ (today_amount/daily_goal)*100 }}%;"></div>
+    <div class="progress-container">
+        <div class="progress-bar" style="width: {{ (today_amount/daily_goal)*100 }}%"></div>
     </div>
 
-    <!-- Water Intake History Table -->
+    <!-- Intake History Table -->
     <h3>Water Intake History</h3>
     <table>
         <thead>
-            <tr>
-                <th>Date</th>
-                <th>Amount (L)</th>
-            </tr>
+            <tr><th>Date</th><th>Amount (L)</th></tr>
         </thead>
         <tbody>
             {% for entry in water_entries %}
@@ -44,32 +58,190 @@
 
     <!-- 7-day Chart -->
     <h3>Last 7 Days Water Intake</h3>
-    <canvas id="waterChart" width="400" height="200"></canvas>
-
-    <a href="{{ url_for('logout') }}">Logout</a>
+    <canvas id="waterChart" width="600" height="300"></canvas>
 </div>
 
+
+        <!-- Reminders Section -->
+        <div id="reminders-section" class="section">
+            <h3>Your Reminders</h3>
+            <form method="POST" action="{{ url_for('add_reminder') }}">
+                <input type="text" name="message" placeholder="Drink water reminder" required>
+                <select name="name" required>
+                    <option value="Morning">Morning</option>
+                    <option value="Afternoon">Afternoon</option>
+                    <option value="Evening">Evening</option>
+                    <option value="Night">Night</option>
+                </select>
+                <input type="time" name="time" required>
+                <button type="submit">Set Reminder</button>
+            </form>
+
+            <ul class="reminder-list">
+                {% for r in reminders %}
+                <li>
+                    <span>{{ r.name }} - {{ r.time }} → {{ r.message }}</span>
+
+                    <div class="reminder-actions">
+                        <!-- Toggle -->
+                        <form method="POST" action="{{ url_for('toggle_reminder', reminder_id=r.id) }}" class="toggle-form">
+                            <label class="switch">
+                                <input type="checkbox" name="active" onchange="this.form.submit()" {% if r.active %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </form>
+
+                        <!-- Delete -->
+                        <form method="POST" action="{{ url_for('delete_reminder', reminder_id=r.id) }}" onsubmit="return confirm('Are you sure you want to delete this reminder?');">
+                            <button type="submit" class="delete-btn">🗑</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- 🔔 Notification Popup -->
+        <div id="reminder-popup" class="popup">
+            <div class="popup-content">
+                <h3 id="popup-title">Reminder</h3>
+                <p id="popup-message"></p>
+                <div class="popup-actions">
+                    <button onclick="dismissReminder()">Dismiss</button>
+                    <button onclick="snoozeReminder()">Snooze 5m</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔊 Notification Sound -->
+        <audio id="reminder-sound" src="{{ url_for('static', filename='sounds/notify.mp3') }}"></audio>
+
+        <!-- Progress -->
+        <div id="progress-section" class="section">
+            <h3>Your Weekly Progress</h3>
+            <canvas id="progressChart" width="600" height="300"></canvas>
+        </div>
+
+        <!-- Settings -->
+        <div id="settings-section" class="section">
+            <h3>Settings</h3>
+            <form method="POST" action="{{ url_for('update_settings') }}">
+                <label>Daily Goal (L)</label>
+                <input type="number" step="0.1" name="daily_goal" value="{{ daily_goal }}">
+                <button type="submit">Save</button>
+            </form>
+        </div>
+    </main>
+</div>
+
+<!-- JS -->
 <script>
-const ctx = document.getElementById('waterChart').getContext('2d');
-const waterChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: {{ chart_labels|tojson }},
-        datasets: [{
-            label: 'Water Intake (L)',
-            data: {{ chart_data|tojson }},
-            backgroundColor: 'rgba(0, 123, 255, 0.6)',
-            borderColor: 'rgba(0, 123, 255, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            y: { beginAtZero: true }
-        }
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById(id + '-section').classList.add('active');
     }
-});
+
+    // ===============================
+    // Daily Chart
+    // ===============================
+    const ctx = document.getElementById('waterChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels|tojson }},
+            datasets: [{
+                label: 'Water Intake (L)',
+                data: {{ chart_data|tojson }},
+                backgroundColor: 'rgba(0, 123, 255, 0.6)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // ===============================
+    // Weekly Progress Chart
+    // ===============================
+    const progressCtx = document.getElementById('progressChart').getContext('2d');
+    new Chart(progressCtx, {
+        type: 'line',
+        data: {
+            labels: {{ weekly_chart | map(attribute='date') | list | safe }},
+            datasets: [{
+                label: 'Total Intake (L)',
+                data: {{ weekly_chart | map(attribute='total') | list | safe }},
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointBackgroundColor: 'rgba(40, 167, 69, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Liters' } },
+                x: { title: { display: true, text: 'Date' } }
+            }
+        }
+    });
+
+    // ===============================
+    // Reminder Notifications
+    // ===============================
+    const reminders = {{ reminders_json|tojson }};
+    const popup = document.getElementById('reminder-popup');
+    const popupTitle = document.getElementById('popup-title');
+    const popupMsg = document.getElementById('popup-message');
+    const reminderSound = document.getElementById('reminder-sound');
+
+    let snoozeUntil = null;
+
+    function showReminder(reminder) {
+        popupTitle.innerText = reminder.name + " Reminder";
+        popupMsg.innerText = reminder.message;
+        reminderSound.play();
+        popup.classList.add("active");
+    }
+
+    function dismissReminder() {
+        popup.classList.remove("active");
+    }
+
+    function snoozeReminder() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 5);
+        snoozeUntil = now.toTimeString().slice(0,5); // HH:MM
+        popup.classList.remove("active");
+    }
+
+    setInterval(() => {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0,5);
+        reminders.forEach(r => {
+            if (r.time === currentTime && snoozeUntil !== currentTime) {
+                showReminder(r);
+            }
+        });
+    }, 60000);
+
+    window.onload = () => {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0,5);
+        reminders.forEach(r => {
+            if (r.time === currentTime) {
+                showReminder(r);
+            }
+        });
+    };
 </script>
 </body>
 </html>
-
