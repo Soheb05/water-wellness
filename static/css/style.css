@@ -1,3 +1,4 @@
+/* General (login/register) */
 body {
     font-family: Arial, sans-serif;
     background: linear-gradient(to right, #00c6ff, #0072ff);
@@ -6,6 +7,7 @@ body {
     align-items: center;
     height: 100vh;
     padding: 20px;
+    margin: 0;
 }
 
 .container {
@@ -32,11 +34,15 @@ button {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    transition: 0.3s ease;
 }
 
 button:hover {
     background-color: #005bb5;
+    transform: scale(1.05);
 }
+
+/* Tables */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -54,22 +60,278 @@ th {
     color: white;
 }
 
-.progress-bar {
-    width: 100%;            /* full width of container */
-    background-color: #ddd; /* background of progress bar */
-    border-radius: 20px;
+/* ======================== */
+/* 📊 Progress Bar          */
+/* ======================== */
+.progress-container {
+    width: 100%;
     height: 25px;
+    background: #eee;
+    border-radius: 20px;
+    overflow: hidden;
     margin: 10px 0 20px 0;
-    overflow: hidden;       /* prevents overflow outside the box */
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.progress {
+.progress-bar {
     height: 100%;
-    background-color: #0072ff;
+    width: 0%;
+    background: linear-gradient(90deg, #ff4d4d, #ff944d); /* default red-orange */
+    border-radius: 20px;
     text-align: center;
     color: white;
+    font-size: 14px;
     line-height: 25px;
-    border-radius: 20px;
-    max-width: 100%;        /* ensures progress never exceeds container */
+    transition: width 0.6s ease, background 0.6s ease;
 }
 
+/* Color stages */
+.progress-bar.low { background: linear-gradient(90deg, #ff4d4d, #ff944d); }   /* <30% */
+.progress-bar.mid { background: linear-gradient(90deg, #ffa500, #ffd633); }  /* 30-60% */
+.progress-bar.high { background: linear-gradient(90deg, #28a745, #00c851); } /* >60% */
+
+/* Navbar (old top version, kept if used elsewhere) */
+.navbar {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.navbar button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #00c6ff, #0072ff);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 4px 4px 8px rgba(0,0,0,0.3),
+                -4px -4px 8px rgba(255,255,255,0.2);
+    transition: all 0.2s ease;
+}
+
+.navbar button:hover {
+    transform: translateY(-3px);
+    box-shadow: 6px 6px 12px rgba(0,0,0,0.4),
+                -6px -6px 12px rgba(255,255,255,0.3);
+}
+
+/* Sections */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ============================= */
+/* 📌 Desktop Dashboard Layout   */
+/* ============================= */
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background: #1a73e8;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.2);
+}
+
+.sidebar h2 {
+    margin-bottom: 20px;
+    font-size: 20px;
+    text-align: center;
+}
+
+.sidebar button,
+.sidebar a button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a73e8;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar button:hover {
+    background: #e0e0e0;
+    transform: translateX(3px);
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+/* ======================== */
+/* 🔔 Reminder Popup        */
+/* ======================== */
+.popup {
+    display: none;
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    text-align: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+.popup.active {
+    display: block;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    animation: popupIn 0.5s ease forwards;
+}
+
+.popup-content {
+    transform-style: preserve-3d;
+    animation: float 2s infinite alternate;
+}
+
+.popup-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.popup-actions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #007bff, #00c6ff);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.popup-actions button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+@keyframes popupIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8) rotateY(90deg); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotateY(0deg); }
+}
+
+@keyframes float {
+    from { transform: rotateX(0deg) rotateY(0deg); }
+    to { transform: rotateX(8deg) rotateY(8deg); }
+}
+
+/* ======================== */
+/* 📋 Reminder List         */
+/* ======================== */
+.reminder-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.reminder-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin: 8px 0;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Switch container */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 55px;
+    height: 30px;
+    perspective: 500px; /* 3D effect */
+}
+
+/* Hide checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background: #ccc;
+    border-radius: 30px;
+    transition: 0.4s;
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.2);
+}
+
+/* Knob */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.4s;
+    transform: rotateY(0deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* When checked */
+.switch input:checked + .slider {
+    background: linear-gradient(145deg, #007bff, #00c6ff);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+}
+.switch input:checked + .slider:before {
+    transform: translateX(25px) rotateY(360deg); /* 3D spin */
+}
+
+.reminder-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Delete button */
+.delete-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
+.delete-btn:hover {
+    background: #e60000;
+    transform: scale(1.2) rotate(10deg);
+}
